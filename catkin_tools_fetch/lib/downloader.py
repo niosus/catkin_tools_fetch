@@ -22,8 +22,6 @@ class Downloader(object):
         ws_path (str): Workspace path. This is where packages live.
     """
 
-    GIT_CLONE_CMD_MASK = "git clone --recursive {url} {path}"
-
     IGNORE_TAG = "[IGNORED]"
     NOT_FOUND_TAG = "[NOT FOUND]"
 
