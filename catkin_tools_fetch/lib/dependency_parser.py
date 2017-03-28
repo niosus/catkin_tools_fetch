@@ -70,17 +70,6 @@ class Parser(object):
             log.critical(" 'package.xml' not found for package [%s].",
                          self.pkg_name)
             return None
-        return self.__get_all_dependencies(path_to_xml)
-
-    def __get_all_dependencies(self, path_to_xml):
-        """Get a dictionary of all dependencies.
-
-        Args:
-            path_to_xml (str): Path to `package.xml` file.
-
-        Returns:
-            dict: Dictionary with an url for each dependency name.
-        """
         xmldoc = minidom.parse(path_to_xml)
         all_deps = []
         for tag in Parser.TAGS:
@@ -135,8 +124,15 @@ class Parser(object):
             urls_node = xmldoc.getElementsByTagName(url_tag)
             for item in urls_node:
                 target = Parser.__get_attr('target', item)
-                dep_dict[target].url = Parser.__get_attr('url', item)
-                dep_dict[target].branch = Parser.__get_attr('branch', item)
+                if not target:
+                    log.debug(" skip xml item: '%s'", item)
+                    continue
+                url = Parser.__get_attr('url', item)
+                if url:
+                    dep_dict[target].url = url
+                branch = Parser.__get_attr('branch', item)
+                if branch:
+                    dep_dict[target].branch = branch
         return dep_dict
 
     @staticmethod

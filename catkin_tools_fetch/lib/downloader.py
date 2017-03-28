@@ -49,7 +49,7 @@ class Downloader(object):
         """Check and download dependencies from a dependency dictionary.
 
         Args:
-            dep_dict (dict): dictionary {name: url} with links to repos.
+            dep_dict (dict): dictionary {name: dep} with dependencies.
 
         Returns:
             int: Return code. 0 if all fine. Git error code otherwise.
@@ -63,7 +63,7 @@ class Downloader(object):
         """Clone dependencies.
 
         Args:
-            checked_deps (dict): Dict {name: url} with valid urls to repos.
+            checked_deps (dict): Dict {name: dep} with valid dependencies.
 
         Returns:
             int: Error code. 0 if all fine, Result from git error otherwise.
@@ -73,14 +73,18 @@ class Downloader(object):
             return Downloader.NO_ERROR
         log.info(" Cloning valid dependencies:")
         error_code = Downloader.NO_ERROR
-        for name, url in checked_deps.items():
+        for name, dependency in checked_deps.items():
+            url = dependency.url
+            branch = dependency.branch
+            if not branch:
+                branch = "master"
             if name in self.available_pkgs:
                 log.info("  %-21s: %s",
                          Tools.decorate(name),
                          GitBridge.EXISTS_TAG)
                 continue
             dep_path = path.join(self.ws_path, name)
-            clone_result = GitBridge.clone(url, dep_path)
+            clone_result = GitBridge.clone(url, dep_path, branch)
             if clone_result in [GitBridge.CLONED_TAG, GitBridge.EXISTS_TAG]:
                 log.info("  %-21s: %s", Tools.decorate(name), clone_result)
             elif clone_result == GitBridge.ERROR_TAG:
@@ -93,8 +97,11 @@ class Downloader(object):
     def __check_dependencies(self, dep_dict):
         """Check dependencies for validity.
 
+        We don't want to avoid packages that we ignore or those which
+        repositories do not exist.
+
         Args:
-            dep_dict (dict): A dictionary {name: url} with dependencies.
+            dep_dict (dict): A dictionary {name: dep} with dependencies.
 
         Returns:
             dict: Only valid dependencies from the input dict.
@@ -104,14 +111,15 @@ class Downloader(object):
             # exit early if there are no new dependencies
             return checked_deps
         log.info(" Checking merged dependencies:")
-        for name, url in dep_dict.items():
+        for name, dependency in dep_dict.items():
+            url = dependency.url
             if name in self.ignore_pkgs:
                 log.info("  %-21s: %s",
                          Tools.decorate(name),
                          Downloader.IGNORE_TAG)
             elif GitBridge.repository_exists(url):
                 log.info("  %-21s: %s", Tools.decorate(name), url)
-                checked_deps[name] = url
+                checked_deps[name] = dependency
             else:
                 log.info("  %-21s: %s",
                          Tools.decorate(name),
