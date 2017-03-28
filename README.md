@@ -34,8 +34,8 @@ and will analyze the dependencies of `package.xml` files for each project in
 this workspace. It will then try to clone the packages looking for them under
 url: `YOUR_DEFAULT_URL/PACKAGE_NAME>`.
 
-Additionaly, one can explicitly define a url for a dependency in `package.xml`
-file under `<export>` tag. For example:
+Additionaly, one can explicitly define a url or a branch for a dependency in
+`package.xml` file under `<export>` tag. For example:
 
 ```xml
 <export>
@@ -46,6 +46,8 @@ file under `<export>` tag. For example:
 Here `PACKAGE_NAME` is the name of your package and `PACKAGE_URL` is the full
 url to your package in git and `BRANCH_NAME` is the branch you want to
 checkout.
+
+Any of these can be skipped. The default will be used instead.
 
 [codacy-img]: https://img.shields.io/codacy/grade/9c050cd8852046ae863c940b8409f9ea.svg?style=flat-square
 [codacy-coverage-img]: https://img.shields.io/codacy/coverage/9c050cd8852046ae863c940b8409f9ea.svg?style=flat-square
