@@ -1,3 +1,4 @@
+"""Module for testing the git bridge."""
 import unittest
 import os
 import shutil
