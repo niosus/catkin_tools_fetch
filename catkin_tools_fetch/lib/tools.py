@@ -22,7 +22,7 @@ class GitBridge(object):
     BRANCH_REGEX = re.compile("## (?!HEAD)([\w\-_]+)")
 
     EXISTS_TAG = "[ALREADY EXISTS]"
-    CLONED_TAG = "[CLONED]"
+    CLONED_TAG = "[CLONED] [BRANCH: '{branch}']"
     ERROR_TAG = "[ERROR]"
 
     @staticmethod
@@ -59,7 +59,7 @@ class GitBridge(object):
             subprocess.check_output(cmd_clone,
                                     stderr=subprocess.STDOUT,
                                     shell=True)
-            return GitBridge.CLONED_TAG
+            return GitBridge.CLONED_TAG.format(branch=branch)
         except subprocess.CalledProcessError as e:
             out_str = e.output.decode("utf8")
             print(out_str)

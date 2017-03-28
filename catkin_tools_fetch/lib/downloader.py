@@ -85,7 +85,8 @@ class Downloader(object):
                 continue
             dep_path = path.join(self.ws_path, name)
             clone_result = GitBridge.clone(url, dep_path, branch)
-            if clone_result in [GitBridge.CLONED_TAG, GitBridge.EXISTS_TAG]:
+            if clone_result in [GitBridge.CLONED_TAG.format(branch=branch),
+                                GitBridge.EXISTS_TAG]:
                 log.info("  %-21s: %s", Tools.decorate(name), clone_result)
             elif clone_result == GitBridge.ERROR_TAG:
                 log.error("  %-21s: %s", Tools.decorate(name), clone_result)
