@@ -12,7 +12,8 @@ install_requires = [
     'catkin_tools >= 0.4.2',
     'mock',
     'setuptools',
-    'futures'
+    'futures',
+    'asyncio'
 ]
 if sys.version_info[0] == 2 and sys.version_info[1] <= 6:
     install_requires.append('argparse')
