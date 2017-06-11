@@ -10,6 +10,7 @@ from concurrent import futures
 
 from catkin_tools_fetch.lib.tools import Tools
 from catkin_tools_fetch.lib.tools import GitBridge
+from catkin_tools_fetch.lib.printer import Printer
 
 log = logging.getLogger('deps')
 
@@ -42,6 +43,7 @@ class Updater(object):
         self.packages = packages
         self.conflict_strategy = conflict_strategy
         self.thread_pool = futures.ThreadPoolExecutor(max_workers=num_threads)
+        self.printer = Printer()
 
     def filter_packages(self, selected_packages):
         """Filter the packages based on user input.
@@ -60,9 +62,10 @@ class Updater(object):
                 filtered_packages[ws_folder] = package
         return filtered_packages
 
-    @staticmethod
-    def pick_tag(folder, package):
+    def pick_tag(self, folder, package):
         """Pick result tag for a folder."""
+        msg = " {}: ...[QUEUED]...".format(Tools.decorate(package.name))
+        self.printer.add_msg(package.name, msg)
         output, branch, has_changes = GitBridge.status(folder)
         if has_changes:
             return package, Updater.CHANGES_TAG
@@ -94,7 +97,7 @@ class Updater(object):
             picked_tag = None
             folder = path.join(self.ws_path, ws_folder)
             futures_list.append(
-                self.thread_pool.submit(Updater.pick_tag, folder, package))
+                self.thread_pool.submit(self.pick_tag, folder, package))
         for future in futures.as_completed(futures_list):
             package, picked_tag = future.result()
             # change logger for warning if something is wrong
@@ -102,7 +105,8 @@ class Updater(object):
                 log_func = log.warning
             # now show the results to the user
             status_msgs.append((package.name, picked_tag))
-            log_func("  %-21s: %s", Tools.decorate(package.name), picked_tag)
+            msg = " {}: {}".format(Tools.decorate(package.name), picked_tag)
+            self.printer.purge_msg(package.name, msg)
 
             # abort if the user wants it
             if abort_on_conflict and log_func == log.warning:

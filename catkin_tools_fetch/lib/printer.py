@@ -4,7 +4,7 @@ import sys
 from threading import RLock
 
 
-class Reprinter:
+class Printer:
     """Reprints messages wiping unneeded lines. Supports multiple threads."""
     __rlock = RLock()
 
@@ -17,7 +17,7 @@ class Reprinter:
         """Add a new message and print it on last line."""
         with self.__rlock:
             self.__msgs[key] = msg
-            print(self.__msgs[key].ljust(70, " "))
+            print(self.__msgs[key].ljust(self.__line_length, " "))
 
     def purge_msg(self, key, last_msg):
         """Print the last message on top active line and move lower."""
@@ -25,7 +25,7 @@ class Reprinter:
             self.__move_up()
             if key in self.__msgs:
                 del self.__msgs[key]
-            print(last_msg.ljust(70, " "))
+            print(last_msg.ljust(self.__line_length, " "))
             self.__print_active(move_up=False)
 
     def __print_active(self, move_up=False):
@@ -34,7 +34,7 @@ class Reprinter:
         if move_up:
             self.__move_up()
         for key in self.__msgs.keys():
-            print(self.__msgs[key].ljust(70, " "))
+            print(self.__msgs[key].ljust(self.__line_length, " "))
 
     def __move_up(self):
         """Move cursor to the top active line."""

@@ -166,9 +166,10 @@ class Tools(object):
             return set(Tools.default_ros_packages)
 
     @staticmethod
-    def decorate(pkg_name):
+    def decorate(pkg_name, max_width=25):
         """Decorate a package name."""
-        return "[" + pkg_name + "]"
+        decorated = "[" + pkg_name + "]"
+        return decorated.ljust(max_width)
 
     default_ros_packages = ['actionlib',
                             'actionlib_msgs',
