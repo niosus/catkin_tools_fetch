@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from catkin_tools_fetch.lib.tools import GitBridge
+from catkin_tools_fetch.lib.dependency_parser import Dependency
 
 
 class TestGitBridge(unittest.TestCase):
@@ -62,11 +63,18 @@ Already up-to-date.
     def test_repository_exists(self):
         """Test behavior if repository exists."""
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        self.assertTrue(GitBridge.repository_exists(http_url))
+        dependency = Dependency(name='test', url=http_url)
+        dep_res, exists = GitBridge.repository_exists(dependency)
+        self.assertTrue(exists)
+        self.assertEqual(dep_res.name, dependency.name)
 
         wrong_url = "https://github.com/niosus"
-        self.assertFalse(GitBridge.repository_exists(wrong_url))
-        self.assertFalse(GitBridge.repository_exists(""))
+        dependency = Dependency(name='test', url=wrong_url)
+        dep_res, exists = GitBridge.repository_exists(dependency)
+        self.assertFalse(exists)
+        dependency = Dependency(name='empty', url='')
+        dep_res, exists = GitBridge.repository_exists(dependency)
+        self.assertFalse(exists)
 
     def test_get_branch_name(self):
         """Test getting the branch name."""
