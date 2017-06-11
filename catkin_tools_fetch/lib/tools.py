@@ -69,7 +69,7 @@ class GitBridge(object):
             return GitBridge.ERROR_TAG
 
     @staticmethod
-    def repository_exists(url):
+    def repository_exists(dependency):
         """Check if repository exists.
 
         Uses `git ls-remote` to check if the repository exists.
@@ -80,17 +80,17 @@ class GitBridge(object):
         Returns:
             bool: True if exists, False otherwise
         """
-        if url == "":
-            return False
-        git_cmd = GitBridge.CHECK_CMD_MASK.format(url=url)
+        if dependency.url == "":
+            return dependency, False
+        git_cmd = GitBridge.CHECK_CMD_MASK.format(url=dependency.url)
         try:
             subprocess.check_call(git_cmd,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE,
                                   shell=True)
-            return True
+            return dependency, True
         except subprocess.CalledProcessError:
-            return False
+            return dependency, False
 
     @staticmethod
     def get_branch_name(git_status_output):

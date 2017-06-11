@@ -12,6 +12,7 @@ install_requires = [
     'catkin_tools >= 0.4.2',
     'mock',
     'setuptools',
+    'futures'
 ]
 if sys.version_info[0] == 2 and sys.version_info[1] <= 6:
     install_requires.append('argparse')
@@ -38,7 +39,7 @@ class PermissiveInstall(install):
                 os.chmod(file, mode)
 
 
-version_str = '0.1.0'
+version_str = '0.1.2'
 github_url = 'https://github.com/niosus/catkin_tools_fetch'
 
 setup(

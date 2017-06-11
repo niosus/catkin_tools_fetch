@@ -6,6 +6,7 @@ Attributes:
 import logging
 
 from os import path
+from concurrent import futures
 
 from catkin_tools_fetch.lib.tools import Tools
 from catkin_tools_fetch.lib.tools import GitBridge
@@ -27,7 +28,7 @@ class Downloader(object):
 
     NO_ERROR = 0
 
-    def __init__(self, ws_path, available_pkgs, ignore_pkgs):
+    def __init__(self, ws_path, available_pkgs, ignore_pkgs, num_threads=4):
         """Init a downloader.
 
         Args:
@@ -44,6 +45,7 @@ class Downloader(object):
         self.ws_path = ws_path
         self.available_pkgs = available_pkgs
         self.ignore_pkgs = ignore_pkgs
+        self.thread_pool = futures.ThreadPoolExecutor(max_workers=num_threads)
 
     def download_dependencies(self, dep_dict):
         """Check and download dependencies from a dependency dictionary.
@@ -73,6 +75,8 @@ class Downloader(object):
             return Downloader.NO_ERROR
         log.info(" Cloning valid dependencies:")
         error_code = Downloader.NO_ERROR
+        # store all tasks in a futures list
+        futures_list = []
         for name, dependency in checked_deps.items():
             url = dependency.url
             branch = dependency.branch
@@ -84,7 +88,13 @@ class Downloader(object):
                          GitBridge.EXISTS_TAG)
                 continue
             dep_path = path.join(self.ws_path, name)
-            clone_result = GitBridge.clone(url, dep_path, branch)
+
+            future = self.thread_pool.submit(
+                GitBridge.clone, url, dep_path, branch)
+            futures_list.append(future)
+        # we have all the futures ready. Now just wait for them to finish.
+        for future in futures.as_completed(futures_list):
+            clone_result = future.result()
             if clone_result in [GitBridge.CLONED_TAG.format(branch=branch),
                                 GitBridge.EXISTS_TAG]:
                 log.info("  %-21s: %s", Tools.decorate(name), clone_result)
@@ -111,18 +121,24 @@ class Downloader(object):
         if not dep_dict:
             # exit early if there are no new dependencies
             return checked_deps
+        futures_list = []
         log.info(" Checking merged dependencies:")
-        for name, dependency in dep_dict.items():
-            url = dependency.url
-            if name in self.ignore_pkgs:
+        for dependency in dep_dict.values():
+            if dependency.name in self.ignore_pkgs:
                 log.info("  %-21s: %s",
-                         Tools.decorate(name),
+                         Tools.decorate(dependency.name),
                          Downloader.IGNORE_TAG)
-            elif GitBridge.repository_exists(url):
-                log.info("  %-21s: %s", Tools.decorate(name), url)
-                checked_deps[name] = dependency
+                continue
+            futures_list.append(self.thread_pool.submit(
+                GitBridge.repository_exists, dependency))
+        for future in futures.as_completed(futures_list):
+            dependency, repo_found = future.result()
+            if repo_found:
+                log.info("  %-21s: %s",
+                         Tools.decorate(dependency.name), dependency.url)
+                checked_deps[dependency.name] = dependency
             else:
                 log.info("  %-21s: %s",
-                         Tools.decorate(name),
+                         Tools.decorate(dependency.name),
                          Downloader.NOT_FOUND_TAG)
         return checked_deps

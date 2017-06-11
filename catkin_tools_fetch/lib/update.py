@@ -6,6 +6,7 @@ Attributes:
 import logging
 import subprocess
 from os import path
+from concurrent import futures
 
 from catkin_tools_fetch.lib.tools import Tools
 from catkin_tools_fetch.lib.tools import GitBridge
@@ -28,7 +29,7 @@ class Updater(object):
     UP_TO_DATE_MSG = "Already up-to-date"
     CONFLICT_MSG = "Automatic merge failed"
 
-    def __init__(self, ws_path, packages, conflict_strategy):
+    def __init__(self, ws_path, packages, conflict_strategy, num_threads=4):
         """Initialize the updater.
 
         Args:
@@ -40,6 +41,7 @@ class Updater(object):
         self.ws_path = ws_path
         self.packages = packages
         self.conflict_strategy = conflict_strategy
+        self.thread_pool = futures.ThreadPoolExecutor(max_workers=num_threads)
 
     def filter_packages(self, selected_packages):
         """Filter the packages based on user input.
@@ -58,6 +60,19 @@ class Updater(object):
                 filtered_packages[ws_folder] = package
         return filtered_packages
 
+    @staticmethod
+    def pick_tag(folder, package):
+        """Pick result tag for a folder."""
+        output, branch, has_changes = GitBridge.status(folder)
+        if has_changes:
+            return package, Updater.CHANGES_TAG
+        try:
+            output = GitBridge.pull(folder, branch)
+            return package, Updater.tag_from_output(output)
+        except subprocess.CalledProcessError as e:
+            log.debug(" git pull returned error: %s", e)
+            return package, Updater.ERROR_TAG
+
     def update_packages(self, selected_packages):
         """Update all the folders to match the remote. Considers the branch.
 
@@ -73,20 +88,15 @@ class Updater(object):
         # some helpful vars
         abort_on_conflict = self.conflict_strategy == Strategy.ABORT
         # stash_on_conflict = self.conflict_strategy == Strategy.STASH
+        futures_list = []
         for ws_folder, package in packages.items():
             log_func = log.info
             picked_tag = None
             folder = path.join(self.ws_path, ws_folder)
-            output, branch, has_changes = GitBridge.status(folder)
-            if has_changes:
-                picked_tag = Updater.CHANGES_TAG
-            else:
-                try:
-                    output = GitBridge.pull(folder, branch)
-                    picked_tag = Updater.tag_from_output(output)
-                except subprocess.CalledProcessError as e:
-                    picked_tag = Updater.ERROR_TAG
-                    log.debug(" git pull returned error: %s", e)
+            futures_list.append(
+                self.thread_pool.submit(Updater.pick_tag, folder, package))
+        for future in futures.as_completed(futures_list):
+            package, picked_tag = future.result()
             # change logger for warning if something is wrong
             if picked_tag not in Updater.OK_TAGS:
                 log_func = log.warning
