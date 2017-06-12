@@ -65,6 +65,10 @@ def prepare_arguments(parser):
         help='Where to look for packages by default.')
     config_group.add_argument('--no_status', action='store_true',
                               help='Do not use progress status when cloning.')
+    config_group.add_argument('--num_threads', '-j',
+                              type=int,
+                              default=4,
+                              help='Number of threads run in parallel.')
 
     # Behavior
     behavior_group = parser.add_argument_group(
