@@ -7,6 +7,8 @@ import subprocess
 import logging
 import re
 
+from termcolor import colored
+
 log = logging.getLogger('deps')
 
 
@@ -21,9 +23,9 @@ class GitBridge(object):
 
     BRANCH_REGEX = re.compile("## (?!HEAD)([\w\-_]+)")
 
-    EXISTS_TAG = "[ALREADY EXISTS]"
-    CLONED_TAG = "[CLONED] [BRANCH: '{branch}']"
-    ERROR_TAG = "[ERROR]"
+    EXISTS_TAG = colored("[ALREADY EXISTS]", "green")
+    CLONED_TAG = colored("[CLONED]", "green") + " [BRANCH: '{branch}']"
+    ERROR_TAG = colored("[ERROR]", "red")
 
     @staticmethod
     def status(repo_folder):

@@ -6,6 +6,7 @@ from threading import RLock
 
 class Printer:
     """Reprints messages wiping unneeded lines. Supports multiple threads."""
+
     __rlock = RLock()
 
     def __init__(self, line_length=70):
@@ -18,6 +19,10 @@ class Printer:
         with self.__rlock:
             self.__msgs[key] = msg
             print(self.__msgs[key].ljust(self.__line_length, " "))
+
+    def print_msg(self, msg):
+        """Print a single message."""
+        print(msg.ljust(self.__line_length, " "))
 
     def purge_msg(self, key, last_msg):
         """Print the last message on top active line and move lower."""

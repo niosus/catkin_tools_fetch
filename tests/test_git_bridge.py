@@ -21,7 +21,8 @@ class TestGitBridge(unittest.TestCase):
     def test_status(self):
         """Test that git status gives us branch and status."""
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        result = GitBridge.clone(http_url, self.test_dir)
+        name, result = GitBridge.clone("test", http_url, self.test_dir)
+        self.assertEqual(name, "test")
         self.assertEqual(result, GitBridge.CLONED_TAG.format(branch="master"))
         output, branch, has_changes = GitBridge.status(self.test_dir)
         expected_output = b"## master...origin/master\n"
@@ -41,18 +42,20 @@ class TestGitBridge(unittest.TestCase):
     def test_clone(self):
         """Test if cloning works as expected."""
         wrong_url = "https://github.com/niosus"
-        result = GitBridge.clone(wrong_url, self.test_dir)
+        name, result = GitBridge.clone("name", wrong_url, self.test_dir)
+        self.assertEqual(name, "name")
         self.assertEqual(result, GitBridge.ERROR_TAG)
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        result = GitBridge.clone(http_url, self.test_dir)
+        name, result = GitBridge.clone("", http_url, self.test_dir)
         self.assertEqual(result, GitBridge.CLONED_TAG.format(branch="master"))
-        result = GitBridge.clone(http_url, ".")
+        name, result = GitBridge.clone("", http_url, ".")
         self.assertEqual(result, GitBridge.EXISTS_TAG)
 
     def test_pull(self):
         """Test pulling a repository."""
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        output = GitBridge.clone(http_url, self.test_dir)
+        name, output = GitBridge.clone(
+            "catkin_tools_fetch", http_url, self.test_dir)
         output = GitBridge.pull(self.test_dir, "master")
         expected_msg = b"""From https://github.com/niosus/catkin_tools_fetch
  * branch            master     -> FETCH_HEAD
