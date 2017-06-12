@@ -54,7 +54,7 @@ class TestGitBridge(unittest.TestCase):
     def test_pull(self):
         """Test pulling a repository."""
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        name, output = GitBridge.clone(
+        _, output = GitBridge.clone(
             "catkin_tools_fetch", http_url, self.test_dir)
         output = GitBridge.pull(self.test_dir, "master")
         expected_msg = b"""From https://github.com/niosus/catkin_tools_fetch
