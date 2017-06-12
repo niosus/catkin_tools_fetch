@@ -50,7 +50,7 @@ class GitBridge(object):
         return output
 
     @staticmethod
-    def clone(url, clone_path, branch="master"):
+    def clone(name, url, clone_path, branch="master"):
         """Clone the repo from url into clone_path."""
         cmd_clone = GitBridge.CLONE_CMD_MASK.format(url=url,
                                                     path=clone_path,
@@ -59,14 +59,14 @@ class GitBridge(object):
             subprocess.check_output(cmd_clone,
                                     stderr=subprocess.STDOUT,
                                     shell=True)
-            return GitBridge.CLONED_TAG.format(branch=branch)
+            return name, GitBridge.CLONED_TAG.format(branch=branch)
         except subprocess.CalledProcessError as e:
             out_str = e.output.decode("utf8")
             print(out_str)
             log.debug(" Clone output: %s", out_str)
             if "already exists" in out_str:
-                return GitBridge.EXISTS_TAG
-            return GitBridge.ERROR_TAG
+                return name, GitBridge.EXISTS_TAG
+            return name, GitBridge.ERROR_TAG
 
     @staticmethod
     def repository_exists(dependency):

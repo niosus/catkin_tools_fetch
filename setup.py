@@ -14,7 +14,8 @@ install_requires = [
     'catkin-pkg > 0.2.9',
     'catkin_tools >= 0.4.2',
     'mock',
-    'setuptools'
+    'setuptools',
+    'termcolor'
 ]
 if sys.version_info[0] == 2 and sys.version_info[1] <= 6:
     install_requires.append('argparse')
@@ -32,6 +33,7 @@ osx_resources_path = os.path.join(
 
 class PermissiveInstall(install):
     """A class for permissive install."""
+
     def run(self):
         """Run the install procedure."""
         install.run(self)
