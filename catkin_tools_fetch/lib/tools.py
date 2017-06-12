@@ -64,10 +64,9 @@ class GitBridge(object):
             return name, GitBridge.CLONED_TAG.format(branch=branch)
         except subprocess.CalledProcessError as e:
             out_str = e.output.decode("utf8")
-            print(out_str)
-            log.debug(" Clone output: %s", out_str)
             if "already exists" in out_str:
                 return name, GitBridge.EXISTS_TAG
+            log.critical("Git error: %s", out_str)
             return name, GitBridge.ERROR_TAG
 
     @staticmethod

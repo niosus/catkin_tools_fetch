@@ -28,6 +28,7 @@ class Downloader(object):
     IGNORE_TAG = colored("[IGNORED]", 'yellow')
     NOT_FOUND_TAG = colored("[NOT FOUND]", 'red')
     CLONING_TAG = "[CLONING]"
+    CHECKING_TAG = "[CHECKING]"
 
     NO_ERROR = 0
 
@@ -77,9 +78,7 @@ class Downloader(object):
             msg = " {}: {}".format(Tools.decorate(pkg_name),
                                    Downloader.CLONING_TAG)
             self.printer.add_msg(pkg_name, msg)
-        future = self.thread_pool.submit(
-            GitBridge.clone, url, dep_path, branch)
-        return future
+        return GitBridge.clone(pkg_name, url, dep_path, branch)
 
     def __clone_dependencies(self, checked_deps):
         """Clone dependencies.
@@ -108,16 +107,25 @@ class Downloader(object):
                 self.printer.purge_msg(name, msg)
                 continue
             dep_path = path.join(self.ws_path, name)
-            future = self.__clone_dependency(name, url, dep_path, branch)
+            future = self.thread_pool.submit(
+                self.__clone_dependency, name, url, dep_path, branch)
             futures_list.append(future)
         # we have all the futures ready. Now just wait for them to finish.
         for future in futures.as_completed(futures_list):
             pkg_name, clone_result = future.result()
             msg = " {}: {}".format(
                 Tools.decorate(pkg_name), clone_result)
+            self.printer.purge_msg(pkg_name, msg)
             if clone_result == GitBridge.ERROR_TAG:
                 error_code = 1
         return error_code
+
+    def __check_dependency(self, dependency):
+        if self.use_preprint:
+            msg = " {}: {}".format(
+                Tools.decorate(dependency.name), Downloader.CHECKING_TAG)
+            self.printer.add_msg(dependency.name, msg)
+        return GitBridge.repository_exists(dependency)
 
     def __check_dependencies(self, dep_dict):
         """Check dependencies for validity.
@@ -141,19 +149,19 @@ class Downloader(object):
             if dependency.name in self.ignore_pkgs:
                 msg = " {}: {}".format(
                     Tools.decorate(dependency.name), Downloader.IGNORE_TAG)
-                self.printer.print_msg(msg)
+                self.printer.add_msg(dependency.name, msg)
                 continue
             futures_list.append(self.thread_pool.submit(
-                GitBridge.repository_exists, dependency))
+                self.__check_dependency, dependency))
         for future in futures.as_completed(futures_list):
             dependency, repo_found = future.result()
             if repo_found:
                 msg = " {}: {}".format(
                     Tools.decorate(dependency.name), dependency.url)
-                self.printer.print_msg(msg)
+                self.printer.purge_msg(dependency.name, msg)
                 checked_deps[dependency.name] = dependency
             else:
                 msg = " {}: {}".format(
                     Tools.decorate(dependency.name), Downloader.NOT_FOUND_TAG)
-                self.printer.print_msg(msg)
+                self.printer.purge_msg(dependency.name, msg)
         return checked_deps
