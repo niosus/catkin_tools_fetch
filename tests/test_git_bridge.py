@@ -46,9 +46,9 @@ class TestGitBridge(unittest.TestCase):
         self.assertEqual(name, "name")
         self.assertEqual(result, GitBridge.ERROR_TAG)
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        name, result = GitBridge.clone("", http_url, self.test_dir)
+        _, result = GitBridge.clone("", http_url, self.test_dir)
         self.assertEqual(result, GitBridge.CLONED_TAG.format(branch="master"))
-        name, result = GitBridge.clone("", http_url, ".")
+        _, result = GitBridge.clone("", http_url, ".")
         self.assertEqual(result, GitBridge.EXISTS_TAG)
 
     def test_pull(self):

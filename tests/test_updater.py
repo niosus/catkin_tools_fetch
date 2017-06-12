@@ -84,7 +84,7 @@ class TestUpdater(unittest.TestCase):
     def test_tag_from_output(self):
         """Test getting a tag from a pull output."""
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        name, output = GitBridge.clone(
+        _, output = GitBridge.clone(
             "catkin_tools_fetch", http_url, self.test_dir)
         output = GitBridge.pull(self.test_dir, "master")
         tag = Updater.tag_from_output(output)
