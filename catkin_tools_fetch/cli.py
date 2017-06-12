@@ -105,7 +105,12 @@ def prepare_arguments_deps(parser):
                                help='Print output from commands.')
     parent_parser.add_argument('--no_status',
                                action='store_true',
+                               default=False,
                                help='Do not use progress status when cloning.')
+    parent_parser.add_argument('--num_threads', '-j',
+                               type=int,
+                               default=4,
+                               help='Number of threads run in parallel.')
 
     packages_help_msg = """
         Packages for which the dependencies are analyzed.
@@ -176,6 +181,8 @@ def main(opts):
         log.info(" Will print status messages while cloning.")
         use_preprint = True
 
+    log.info(" Using %s threads.", opts.num_threads)
+
     context = Context.load(opts.workspace, opts.profile, opts, append=True)
     default_url = Tools.prepare_default_url(opts.default_url)
     if not opts.workspace:
@@ -203,14 +210,16 @@ It has the same interface. The old command will be removed in future.
                      workspace=opts.workspace,
                      context=context,
                      default_url=default_url,
-                     use_preprint=use_preprint)
+                     use_preprint=use_preprint,
+                     num_threads=opts.num_threads)
     if opts.subverb == 'update':
         return update(packages=opts.packages,
                       workspace=opts.workspace,
                       context=context,
                       default_url=default_url,
                       conflict_strategy=opts.on_conflict,
-                      use_preprint=use_preprint)
+                      use_preprint=use_preprint,
+                      num_threads=opts.num_threads)
 
 
 def update(packages,
@@ -218,7 +227,8 @@ def update(packages,
            context,
            default_url,
            conflict_strategy,
-           use_preprint):
+           use_preprint,
+           num_threads):
     """Update packages from the available remotes.
 
     Args:
@@ -235,13 +245,21 @@ def update(packages,
     workspace_packages = find_packages(context.source_space_abs,
                                        exclude_subspaces=True,
                                        warnings=[])
-    updater = Updater(ws_path, workspace_packages,
-                      conflict_strategy, use_preprint)
+    updater = Updater(ws_path=ws_path,
+                      packages=workspace_packages,
+                      conflict_strategy=conflict_strategy,
+                      use_preprint=use_preprint,
+                      num_threads=num_threads)
     updater.update_packages(packages)
     return 0
 
 
-def fetch(packages, workspace, context, default_url, use_preprint):
+def fetch(packages,
+          workspace,
+          context,
+          default_url,
+          use_preprint,
+          num_threads):
     """Fetch dependencies of a package.
 
     Args:
@@ -290,8 +308,11 @@ def fetch(packages, workspace, context, default_url, use_preprint):
                     # to download dependencies for one project only.
                     packages.add(new_dep_name)
         try:
-            downloader = Downloader(
-                ws_path, available_pkgs, ignore_pkgs, use_preprint)
+            downloader = Downloader(ws_path=ws_path,
+                                    available_pkgs=available_pkgs,
+                                    ignore_pkgs=ignore_pkgs,
+                                    use_preprint=use_preprint,
+                                    num_threads=num_threads)
         except ValueError as e:
             log.critical(" Encountered error. Abort.")
             log.critical(" Error message: %s", e.message)
