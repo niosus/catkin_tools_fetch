@@ -99,7 +99,7 @@ def prepare_arguments_deps(parser):
 
     # add config flags to all groups that need it
     parent_parser.add_argument(
-        '--default_url', default="",
+        '--default_url', default="{package}",
         help='Where to look for packages by default.')
 
     # Behavior

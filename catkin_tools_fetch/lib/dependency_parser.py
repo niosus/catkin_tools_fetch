@@ -62,16 +62,19 @@ class Parser(object):
     TAGS = ["build_depend", "depend"]
     URL_TAGS = ["git_url"]
 
-    def __init__(self, download_mask, pkg_name):
+    def __init__(self, default_url, pkg_name):
         """Initialize a dependency parser.
 
         Args:
-            download_mask (str): a mask containing {package} tag to be replaced
+            default_url (str): a mask containing {package} tag to be replaced
                 later, e.g. git@<path>/{package}.git
             pkg_name (str): Name of current package
         """
         super(Parser, self).__init__()
-        self.__download_mask = download_mask
+        if '{package}' not in default_url:
+            raise ValueError(
+                '`default_url` must contain a "{package}" placeholder.')
+        self.__default_url = default_url
         self.pkg_name = pkg_name
         self.printer = Printer()
 
@@ -188,8 +191,7 @@ class Parser(object):
         """
         dep_dict = {}
         for dep_name in all_deps_list:
-            url = self.__download_mask.format(package=dep_name)
-            dependency = Dependency(name=dep_name, url=url)
+            dependency = Dependency(name=dep_name)
             dep_dict[dep_name] = dependency
         return dep_dict
 
