@@ -26,7 +26,7 @@ class TestParser(unittest.TestCase):
     def test_get_dependencies(self):
         """Test that parsing dependencies works."""
         pkg_folder = path.join(path.dirname(__file__), "data", "simple_pkg")
-        parser = Parser("link_default/{package}", "simple_pkg")
+        parser = Parser("{package}", "simple_pkg")
         deps = parser.get_dependencies(pkg_folder)
         self.assertIn("dep_1", deps)
         self.assertIn("dep_2", deps)
@@ -41,7 +41,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(deps["dep_2"].branch, "dev")
 
         self.assertEqual(deps["dep_3"].name, "dep_3")
-        self.assertEqual(deps["dep_3"].url, "link_default/dep_3")
+        self.assertEqual(deps["dep_3"].url, "http_link_default/dep_3")
         self.assertIsNone(deps["dep_3"].branch)
 
 
