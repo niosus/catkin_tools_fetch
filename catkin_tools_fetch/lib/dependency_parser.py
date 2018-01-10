@@ -74,7 +74,7 @@ class Parser(object):
         if '{package}' not in default_url:
             raise ValueError(
                 '`default_url` must contain a "{package}" placeholder.')
-        self.__default_url = default_url
+        self.default_url = default_url
         self.pkg_name = pkg_name
         self.printer = Printer()
 
@@ -103,7 +103,7 @@ class Parser(object):
         self.printer.print_msg(msg)
         log.debug(" Dependencies: %s", all_deps)
         deps_with_urls = self.__init_dep_dict(all_deps)
-        return Parser.__update_explicit_values(xmldoc, deps_with_urls)
+        return self.__update_explicit_values(xmldoc, deps_with_urls)
 
     @staticmethod
     def __fix_dependencies(deps, pkg_name):
@@ -125,8 +125,7 @@ class Parser(object):
                     pkg_name, dep, fixed_deps[i])
         return fixed_deps
 
-    @staticmethod
-    def __update_explicit_values(xmldoc, dep_dict):
+    def __update_explicit_values(self, xmldoc, dep_dict):
         """Specify explicit values instead of default ones.
 
         A user can define explicit values for each package in the <export> tag.
@@ -142,7 +141,6 @@ class Parser(object):
         Returns:
             dict: A dict with final dependencies parsed from <export> tags
         """
-        default_url = Tools.PACKAGE_TAG  # Initial default value.
         for url_tag in Parser.URL_TAGS:
             urls_node = xmldoc.getElementsByTagName(url_tag)
             for item in urls_node:
@@ -155,7 +153,7 @@ class Parser(object):
                 if url:
                     if target == 'all':
                         # The target is 'all' so this denotes a default url.
-                        default_url = Tools.prepare_default_url(url)
+                        self.default_url = Tools.prepare_default_url(url)
                         continue
                     # Here we assume url is a full explicit url to package.
                     dep_dict[target].url = url
@@ -167,7 +165,7 @@ class Parser(object):
                 log.debug(" updated dependency: %s", dep_dict[target])
         # Update the default urls for all dependencies
         for dep in dep_dict.values():
-            dep.update_url_from_default_if_needed(default_url)
+            dep.update_url_from_default_if_needed(self.default_url)
         return dep_dict
 
     @staticmethod

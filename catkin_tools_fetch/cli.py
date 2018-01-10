@@ -220,7 +220,6 @@ It has the same interface. The old command will be removed in future.
         return update(packages=opts.packages,
                       workspace=opts.workspace,
                       context=context,
-                      default_url=default_url,
                       conflict_strategy=opts.on_conflict,
                       use_preprint=use_preprint,
                       num_threads=opts.num_threads)
@@ -229,7 +228,6 @@ It has the same interface. The old command will be removed in future.
 def update(packages,
            workspace,
            context,
-           default_url,
            conflict_strategy,
            use_preprint,
            num_threads):
@@ -239,7 +237,6 @@ def update(packages,
         packages (list): A list of packages provided by the user.
         workspace (str): Path to a workspace (without src/ in the end).
         context (Context): Current context. Needed to find current packages.
-        default_url (str): A default url with a {package} placeholder in it.
         use_preprint (bool): Show status messages while cloning
 
     Returns:
@@ -314,6 +311,8 @@ def fetch(packages,
                     # we must analyze their dependencies too even if we wanted
                     # to download dependencies for one project only.
                     packages.add(new_dep_name)
+                # Update default url to use the new version of it further on.
+                default_url = parser.default_url
         try:
             downloader = Downloader(ws_path=ws_path,
                                     available_pkgs=available_pkgs,
