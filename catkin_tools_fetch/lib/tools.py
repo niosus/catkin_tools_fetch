@@ -115,6 +115,8 @@ class Tools(object):
         default_ros_packages (str[]): default packages for ROS
     """
 
+    PACKAGE_TAG = '{package}'
+
     @staticmethod
     def prepare_default_url(default_url):
         """Insert {package} statement into the URL.
@@ -127,15 +129,14 @@ class Tools(object):
         Returns:
             str: Url with {package} tag placed inside of it.
         """
-        package_tag = '{package}'
-        if len(default_url) == 0:
+        if not default_url:
             return default_url
         if not default_url.endswith('/'):
             default_url += '/'
         if default_url.startswith('git'):
-            return default_url + package_tag + '.git'
+            return default_url + Tools.PACKAGE_TAG + '.git'
         if default_url.startswith('http'):
-            return default_url + package_tag
+            return default_url + Tools.PACKAGE_TAG
         return default_url
 
     @staticmethod

@@ -27,6 +27,21 @@ class Dependency(object):
         self.url = url
         self.branch = branch
 
+    def update_url_from_default_if_needed(self, default_url):
+        """Set a url from a default one if not set before."""
+        if not default_url:
+            return
+        if self.url:
+            log.info(
+                " Package [%s]: Skip default urls. Explicit one defined: %s",
+                self.name, self.url)
+            return
+        if Tools.PACKAGE_TAG not in default_url:
+            log.warning('url: "%s" is malformed. "%s" tag expected.',
+                        default_url, Tools.PACKAGE_TAG)
+            return
+        self.url = default_url.format(package=self.name)
+
     def __repr__(self):
         """Show how to print it."""
         return "name: '{}', branch: '{}', url: '{}'".format(
@@ -56,9 +71,6 @@ class Parser(object):
             pkg_name (str): Name of current package
         """
         super(Parser, self).__init__()
-        if '{package}' not in download_mask:
-            raise ValueError(
-                '`download_mask` must contain a "{package}" placeholder.')
         self.__download_mask = download_mask
         self.pkg_name = pkg_name
         self.printer = Printer()
@@ -127,16 +139,22 @@ class Parser(object):
         Returns:
             dict: A dict with final dependencies parsed from <export> tags
         """
+        default_url = Tools.PACKAGE_TAG  # Initial default value.
         for url_tag in Parser.URL_TAGS:
             urls_node = xmldoc.getElementsByTagName(url_tag)
             for item in urls_node:
                 target = Parser.__get_attr('target', item)
                 if not target:
-                    log.debug(" skip xml item: '%s'", item)
+                    log.warning(" skip xml item: '%s'", item)
                     continue
                 log.debug(" read target:'%s'", target)
                 url = Parser.__get_attr('url', item)
                 if url:
+                    if target == 'all':
+                        # The target is 'all' so this denotes a default url.
+                        default_url = Tools.prepare_default_url(url)
+                        continue
+                    # Here we assume url is a full explicit url to package.
                     dep_dict[target].url = url
                     log.debug(" target url:'%s'", url)
                 branch = Parser.__get_attr('branch', item)
@@ -144,6 +162,9 @@ class Parser(object):
                     dep_dict[target].branch = branch
                     log.debug(" target branch:'%s'", branch)
                 log.debug(" updated dependency: %s", dep_dict[target])
+        # Update the default urls for all dependencies
+        for dep in dep_dict.values():
+            dep.update_url_from_default_if_needed(default_url)
         return dep_dict
 
     @staticmethod
