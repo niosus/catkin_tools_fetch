@@ -83,11 +83,11 @@ class TestUpdater(unittest.TestCase):
 
     def test_tag_from_output(self):
         """Test getting a tag from a pull output."""
-        temp_folder = tempfile.mkdtemp()
         http_url = "https://github.com/niosus/catkin_tools_fetch"
         _, output = GitBridge.clone(
-            "catkin_tools_fetch", http_url, temp_folder)
-        output = GitBridge.pull(temp_folder, "master")
+            "catkin_tools_fetch", http_url, self.test_dir)
+        output = GitBridge.pull(self.test_dir, "master")
+        print(output)
         tag = Updater.tag_from_output(output)
         self.assertEqual(tag, Updater.UP_TO_DATE_TAG)
 
@@ -109,15 +109,14 @@ Already up-to-date.
 
     def test_update_full_simple(self):
         """Test updater end to end on single repo."""
-        temp_folder = tempfile.mkdtemp()
         http_url = "https://github.com/niosus/catkin_tools_fetch"
-        GitBridge.clone("fetch", http_url, temp_folder)
+        GitBridge.clone("fetch", http_url, self.test_dir)
         pkg = MagicMock()
         type(pkg).name = PropertyMock(return_value="pkg")
         packages = {
             ".": pkg
         }
-        updater = Updater(temp_folder, packages, "abort")
+        updater = Updater(self.test_dir, packages, "abort")
         selected_packages = [pkg.name]
         status_msgs = updater.update_packages(selected_packages)
         self.assertEquals(len(status_msgs), 1)
