@@ -87,7 +87,6 @@ class TestUpdater(unittest.TestCase):
         _, output = GitBridge.clone(
             "catkin_tools_fetch", http_url, self.test_dir)
         output = GitBridge.pull(self.test_dir, "master")
-        print(output)
         tag = Updater.tag_from_output(output)
         self.assertEqual(tag, Updater.UP_TO_DATE_TAG)
 
