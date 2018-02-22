@@ -22,25 +22,25 @@ class Dependency(object):
 
         Args:
             name (str): Name of the dependee package
+            url (str): Explicit location url
+            branch (str): Name of branch
         """
         self.name = name
         self.url = url
         self.branch = branch
+        self.default_urls = set()
 
-    def update_url_from_default_if_needed(self, default_url):
-        """Set a url from a default one if not set before."""
-        if not default_url:
+    def set_default_urls_if_needed(self, default_urls):
+        """Set default urls if no url set before."""
+        if not default_urls:
             return
         if self.url:
             log.info(
                 " Package [%s]: Skip default urls. Explicit one defined: %s",
                 self.name, self.url)
             return
-        if Tools.PACKAGE_TAG not in default_url:
-            log.warning('url: "%s" is malformed. "%s" tag expected.',
-                        default_url, Tools.PACKAGE_TAG)
-            return
-        self.url = default_url.format(package=self.name)
+        self.default_urls = Tools.populate_urls_with_name(urls=default_urls,
+                                                          pkg_name=self.name)
 
     def __repr__(self):
         """Show how to print it."""
@@ -62,19 +62,22 @@ class Parser(object):
     TAGS = ["build_depend", "depend"]
     URL_TAGS = ["git_url"]
 
-    def __init__(self, default_url, pkg_name):
+    def __init__(self, default_urls, pkg_name):
         """Initialize a dependency parser.
 
         Args:
-            default_url (str): a mask containing {package} tag to be replaced
-                later, e.g. git@<path>/{package}.git
+            default_urls (set(str)): a set of masks containing {package}
+                tag to be replaced later, e.g. git@<path>/{package}.git
             pkg_name (str): Name of current package
         """
         super(Parser, self).__init__()
-        if '{package}' not in default_url:
-            raise ValueError(
-                '`default_url` must contain a "{package}" placeholder.')
-        self.default_url = default_url
+        # First perform a sanity check.
+        for url in default_urls:
+            if '{package}' not in url:
+                error = "Default url: '{}' must contain: '{}'".format(
+                    url, Tools.PACKAGE_TAG)
+                raise ValueError(error)
+        self.default_urls = default_urls
         self.pkg_name = pkg_name
         self.printer = Printer()
 
@@ -153,7 +156,12 @@ class Parser(object):
                 if url:
                     if target == 'all':
                         # The target is 'all' so this denotes a default url.
-                        self.default_url = Tools.prepare_default_url(url)
+                        prepared_url = Tools.prepare_default_url(url)
+                        if prepared_url:
+                            self.default_urls.add(prepared_url)
+                        else:
+                            log.error("Url: '%s' is wrongly formatted.", url)
+                        # We are done reading this entry, skip to next now.
                         continue
                     # Here we assume url is a full explicit url to package.
                     dep_dict[target].url = url
@@ -165,7 +173,7 @@ class Parser(object):
                 log.debug(" updated dependency: %s", dep_dict[target])
         # Update the default urls for all dependencies
         for dep in dep_dict.values():
-            dep.update_url_from_default_if_needed(self.default_url)
+            dep.set_default_urls_if_needed(self.default_urls)
         return dep_dict
 
     @staticmethod
