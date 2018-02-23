@@ -101,7 +101,7 @@ class Parser(object):
             deps = Parser.__node_to_list(xmldoc, tag)
             deps = Parser.__fix_dependencies(deps, self.pkg_name)
             all_deps += deps
-        msg = " {}: Found {} dependencies".format(
+        msg = " {}: Found {} valid dependencies".format(
             Tools.decorate(self.pkg_name), len(all_deps))
         self.printer.print_msg(msg)
         log.debug(" Dependencies: %s", all_deps)

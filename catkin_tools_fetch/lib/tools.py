@@ -87,10 +87,11 @@ class GitBridge(object):
             urls.append(dependency.url)
         else:
             urls.extend(dependency.default_urls)
+        log.debug(" Checking urls: %s", urls)
         for url in urls:
             git_cmd = GitBridge.CHECK_CMD_MASK.format(url=url)
             try:
-                log.debug("Searching for package '%s' under url '%s'",
+                log.debug(" Searching for package '%s' under url '%s'",
                           dependency.name, url)
                 subprocess.check_call(git_cmd,
                                       stdout=subprocess.PIPE,
@@ -210,7 +211,11 @@ class Tools(object):
                 str_output = output
             output = str_output.splitlines()
             for pkg_line in output:
-                pkg_list.append(pkg_line.split(' ')[0])
+                pkg_line_list = pkg_line.split(' ')
+                pkg_name = pkg_line_list[0]
+                pkg_path = pkg_line_list[1]
+                if not pkg_path.startswith('/home/'):
+                    pkg_list.append(pkg_name)
             log.info(" [ROS]: Ignoring %s packages.", len(pkg_list))
             return set(pkg_list)
         except subprocess.CalledProcessError:

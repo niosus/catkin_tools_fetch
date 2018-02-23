@@ -142,7 +142,7 @@ def main(opts):
     log.info(" Using %s threads.", opts.num_threads)
 
     context = Context.load(opts.workspace, opts.profile, opts, append=True)
-    if opts.default_urls != opts.default_url:
+    if opts.default_url != Tools.PACKAGE_TAG:
         opts.default_urls += "," + opts.default_url
     # Prepare the set of default urls
     default_urls = Tools.prepare_default_urls(opts.default_urls)
