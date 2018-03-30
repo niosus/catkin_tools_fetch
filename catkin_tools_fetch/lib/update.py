@@ -137,19 +137,3 @@ class Updater(object):
             # this is a warning
             return colored(picked_tag, 'yellow')
         return colored(picked_tag, 'red')
-
-
-class Strategy(object):
-    """An enum of stategies for update."""
-
-    IGNORE = 'ignore'
-    ABORT = 'abort'
-    # STASH = 'stash'
-
-    @classmethod
-    def list_all(cls):
-        """List all strategies."""
-        all_strategies = [val for key, val in cls.__dict__.items()
-                          if not callable(getattr(cls, key))
-                          and not key.startswith("__")]
-        return all_strategies

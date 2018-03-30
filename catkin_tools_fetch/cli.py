@@ -25,7 +25,6 @@ from catkin_tools_fetch.lib.dependency_parser import Parser
 from catkin_tools_fetch.lib.downloader import Downloader
 from catkin_tools_fetch.lib.tools import Tools
 from catkin_tools_fetch.lib.update import Updater
-from catkin_tools_fetch.lib.update import Strategy
 
 logging.basicConfig()
 log = logging.getLogger('deps')
