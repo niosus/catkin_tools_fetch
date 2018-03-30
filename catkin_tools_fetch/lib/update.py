@@ -35,7 +35,6 @@ class Updater(object):
     def __init__(self,
                  ws_path,
                  packages,
-                 conflict_strategy,
                  use_preprint=True,
                  colored=True,
                  num_threads=4):
@@ -44,12 +43,10 @@ class Updater(object):
         Args:
             ws_path (str): Path to the workspace
             packages (dict(str)): Dictionary of packages to be downloaded
-            conflict_strategy (str): A strategy to handle conflicts
         """
         super(Updater, self).__init__()
         self.ws_path = ws_path
         self.packages = packages
-        self.conflict_strategy = conflict_strategy
         self.thread_pool = futures.ThreadPoolExecutor(max_workers=num_threads)
         self.printer = Printer()
         self.colored = colored
